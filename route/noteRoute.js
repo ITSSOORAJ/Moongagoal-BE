@@ -16,6 +16,31 @@ router.post('/', auth, async (req, res) => {
   await note.save();
   res.json(note);
 });
+// Update note
+router.put('/:id', auth, async (req, res) => {
+  try {
+    const { content } = req.body;
+
+    if (!content || !content.trim()) {
+      return res.status(400).json({ msg: 'Content is required' });
+    }
+
+    const note = await Note.findOneAndUpdate(
+      { _id: req.params.id, user: req.user.id },  // ensure user owns the note
+      { content },
+      { new: true }                               // return updated note
+    );
+
+    if (!note) {
+      return res.status(404).json({ msg: 'Note not found' });
+    }
+
+    res.json(note);
+  } catch (err) {
+    console.error('Error updating note:', err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+});
 
 // Delete note
 router.delete('/:id', auth, async (req, res) => {
@@ -35,3 +60,4 @@ router.post('/evaluate', auth, async (req, res) => {
 });
 
 module.exports = router;
+
